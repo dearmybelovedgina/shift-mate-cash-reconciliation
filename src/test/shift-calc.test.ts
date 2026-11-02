@@ -100,7 +100,7 @@ describe("Quick orders by payment method", () => {
     expect(sug?.remainingIfConfirmed).toBeUndefined();
   });
   it("pending cash expense is not suggested for a surplus", () => {
-    const s: Shift = { ...withEx([{ ...qo({ status: "pending" }), type: "expense", paymentMethod: null }]), reconciliation: { adjustments: [{ id: "a", label: "", amount: -10_000, reason: "x", confirmedAt: "" }], recountConfirmed: true, status: null, notes: "" } };
+    const s: Shift = { ...withEx([{ ...qo({ status: "pending" }), type: "expense", paymentMethod: null }]), reconciliation: { adjustments: [{ id: "a", label: "", amount: -60_000, reason: "x", confirmedAt: "" }], recountConfirmed: true, status: null, notes: "" } };
     expect(computeBreakdown(s).discrepancy).toBeGreaterThan(0);
     expect(buildSuggestions(s).some((x) => x.kind === "pending_expense")).toBe(false);
   });
