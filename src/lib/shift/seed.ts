@@ -1,4 +1,8 @@
-import { DENOMINATIONS, type CashCountLine, type Shift } from "./types";
+import { DENOMINATIONS, type CashCountLine, type ExceptionLog, type Shift } from "./types";
+
+const ex = (e: Omit<ExceptionLog, "paymentMethod" | "cashAmount" | "qrAmount" | "attested"> & Partial<ExceptionLog>): ExceptionLog => ({
+  paymentMethod: null, cashAmount: null, qrAmount: null, attested: e.status !== "pending", ...e,
+});
 
 // All data below is FICTIONAL demo data, labeled "[Demo]" in the UI.
 
@@ -21,7 +25,7 @@ export function makeSeedShifts(): Shift[] {
       handoverFloat: 2_000_000,
       opening: { kind: "opening", lines: lines(standardOpening), countedAt: "2026-11-02T06:00:00+07:00" },
       exceptions: [
-        { id: "m1", type: "expense", amount: 120_000, description: "Mua đá viên", time: "2026-11-02T08:15:00+07:00", status: "accounted_in_pos", evidence: "Hoá đơn giấy, đã nhập POS" },
+        ex({ id: "m1", type: "expense", amount: 120_000, description: "Mua đá viên", time: "2026-11-02T08:15:00+07:00", status: "accounted_in_pos", evidence: "Hoá đơn POS #A-102 (giả lập)", provenance: "Hoá đơn giấy cửa hàng đá" }),
       ],
       pos: { cashSales: 5_450_000, cashOutflows: 120_000 },
       closing: {
@@ -40,7 +44,7 @@ export function makeSeedShifts(): Shift[] {
       handoverFloat: 2_000_000,
       opening: { kind: "opening", lines: lines(standardOpening), countedAt: "2026-11-02T14:00:00+07:00" },
       exceptions: [
-        { id: "e1", type: "expense", amount: 50_000, description: "Mua đá viên gấp — chưa nhập POS", time: "2026-11-02T16:40:00+07:00", status: "verified", evidence: "Có biên nhận cửa hàng đá, quản lý đã xem" },
+        ex({ id: "e1", type: "expense", amount: 50_000, description: "Mua đá viên gấp — chưa nhập POS", time: "2026-11-02T16:40:00+07:00", status: "verified", evidence: "Biên nhận cửa hàng đá số 0457 (giả lập)", provenance: "Quản lý yêu cầu mua gấp" }),
       ],
       pos: { cashSales: 3_200_000, cashOutflows: 0 },
       closing: {
@@ -59,7 +63,7 @@ export function makeSeedShifts(): Shift[] {
       handoverFloat: 2_000_000,
       opening: { kind: "opening", lines: lines(standardOpening), countedAt: "2026-11-01T14:00:00+07:00" },
       exceptions: [
-        { id: "u1", type: "expense", amount: 30_000, description: "Mua khăn giấy", time: "2026-11-01T18:05:00+07:00", status: "pending", evidence: "" },
+        ex({ id: "u1", type: "expense", amount: 30_000, description: "Mua khăn giấy", time: "2026-11-01T18:05:00+07:00", status: "pending", evidence: "", provenance: "Chưa có biên nhận — nhân viên phục vụ mua, chưa nộp lại" }),
       ],
       pos: { cashSales: 4_000_000, cashOutflows: 0 },
       closing: {
@@ -78,9 +82,9 @@ export function makeSeedShifts(): Shift[] {
       handoverFloat: 2_000_000,
       opening: { kind: "opening", lines: lines({ ...standardOpening, 20000: 4 }), countedAt: "2026-10-31T06:00:00+07:00" },
       exceptions: [
-        { id: "c1", type: "expense", amount: 70_000, description: "Mua sữa tươi", time: "2026-10-31T09:00:00+07:00", status: "accounted_in_pos", evidence: "Nhân viên nói đã nhập POS" },
-        { id: "c2", type: "quick_order", amount: 85_000, description: "Mất mạng — 2 cà phê sữa, 1 bạc xỉu", time: "2026-10-31T10:10:00+07:00", status: "verified", evidence: "Phiếu ghi tay #1" },
-        { id: "c3", type: "quick_order", amount: 85_000, description: "Mất mạng — đơn bàn 4", time: "2026-10-31T10:14:00+07:00", status: "verified", evidence: "Phiếu ghi tay #2?" },
+        ex({ id: "c1", type: "expense", amount: 70_000, description: "Mua sữa tươi", time: "2026-10-31T09:00:00+07:00", status: "accounted_in_pos", evidence: "Nhân viên nói đã nhập POS (chưa có mã hoá đơn)", provenance: "Lời kể của nhân viên" }),
+        ex({ id: "c2", type: "quick_order", amount: 85_000, description: "Mất mạng — 2 cà phê sữa, 1 bạc xỉu", time: "2026-10-31T10:10:00+07:00", status: "verified", evidence: "Phiếu ghi tay #1", provenance: "Mất mạng 10:05–10:30", paymentMethod: "cash" }),
+        ex({ id: "c3", type: "quick_order", amount: 85_000, description: "Mất mạng — đơn bàn 4", time: "2026-10-31T10:14:00+07:00", status: "verified", evidence: "Phiếu ghi tay #2?", provenance: "Mất mạng 10:05–10:30 — có thể trùng phiếu #1", paymentMethod: "cash" }),
       ],
       pos: { cashSales: 2_500_000, cashOutflows: 40_000 },
       closing: {

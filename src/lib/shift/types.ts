@@ -14,6 +14,8 @@ export interface CashCount {
 
 export type ExceptionType = "expense" | "quick_order";
 export type ExceptionStatus = "pending" | "verified" | "accounted_in_pos";
+/** Actual payment method of a quick order. null = unknown (legacy data) — never assumed to be cash. */
+export type PaymentMethod = "cash" | "qr" | "split";
 
 export interface ExceptionLog {
   id: string;
@@ -22,7 +24,17 @@ export interface ExceptionLog {
   description: string;
   time: string; // ISO
   status: ExceptionStatus;
+  /** Evidence / reference (receipt no., handwritten slip no., POS bill ID). Typed text only — not independently verified. */
   evidence: string;
+  /** Provenance/context note, required even when pending (e.g. "chưa có biên nhận, quản lý gọi mua gấp"). */
+  provenance: string;
+  /** Quick orders only. null for expenses or unknown legacy records. */
+  paymentMethod: PaymentMethod | null;
+  /** Split quick orders only: cash part and QR part (sum must equal amount). */
+  cashAmount: number | null;
+  qrAmount: number | null;
+  /** Staff ticked the confirmation checkbox matching the current non-pending status. */
+  attested: boolean;
 }
 
 export interface POSSummary {
