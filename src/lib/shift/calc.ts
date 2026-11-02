@@ -121,6 +121,19 @@ export function findConflicts(shift: Shift): Conflict[] {
       });
     }
   }
+  return out;
+}
+
+export interface Suggestion {
+  id: string;
+  kind: "pending_expense" | "pending_quick_order" | "recount";
+  title: string;
+  detail: string;
+  exceptionId?: string;
+  /** Discrepancy after this suggestion would be confirmed. */
+  remainingIfConfirmed?: number;
+}
+
 
 /**
  * Rule-based hints only. They describe possibilities ("có thể"), never a root cause.
