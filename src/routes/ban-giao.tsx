@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EXCEPTION_STATUS_LABEL, EmptyState, FieldError, Notice, PageHeader, Panel, RECON_LABEL, ReconBadge } from "@/components/shift/ui";
-import { computeBreakdown, findConflicts, formatSigned, formatVND, openIssues, openingDiscrepancy, suggestedStatus } from "@/lib/shift/calc";
+import { computeBreakdown, formatSigned, formatVND, openIssues, openingDiscrepancy, suggestedStatus } from "@/lib/shift/calc";
 import { useShifts } from "@/lib/shift/store";
 import type { ReconciliationStatus, Shift } from "@/lib/shift/types";
 
