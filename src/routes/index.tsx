@@ -23,7 +23,7 @@ function Dashboard() {
   const { active, state, setActive, createShift, deleteShift, resetDemo } = useShifts();
   const [name, setName] = useState("");
   const [float, setFloat] = useState("2000000");
-  const [errors, setErrors] = useState<{ name?: string; float?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string | undefined; float?: string | undefined }>({});
 
   if (!active) return null;
   const b = computeBreakdown(active);

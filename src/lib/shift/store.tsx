@@ -26,7 +26,7 @@ const ShiftContext = createContext<Ctx | null>(null);
 
 function initialState(): State {
   const shifts = makeSeedShifts();
-  return { shifts, activeId: shifts[0].id };
+  return { shifts, activeId: shifts[0]!.id };
 }
 
 export function ShiftProvider({ children }: { children: ReactNode }) {
@@ -88,7 +88,7 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
       setState((st) => {
         const shifts = st.shifts.filter((s) => s.id !== id);
         if (!shifts.length) return initialState();
-        return { shifts, activeId: st.activeId === id ? shifts[0].id : st.activeId };
+        return { shifts, activeId: st.activeId === id ? shifts[0]!.id : st.activeId };
       }),
     resetDemo: () => setState(initialState()),
   };

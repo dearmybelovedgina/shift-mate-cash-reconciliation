@@ -30,7 +30,7 @@ function InvestigatePage() {
   const [adjSign, setAdjSign] = useState<1 | -1>(-1);
   const [adjReason, setAdjReason] = useState("");
   const [adjConfirm, setAdjConfirm] = useState(false);
-  const [adjErrors, setAdjErrors] = useState<{ amount?: string; reason?: string; confirm?: string }>({});
+  const [adjErrors, setAdjErrors] = useState<{ amount?: string | undefined; reason?: string | undefined; confirm?: string | undefined }>({});
   if (!active) return null;
 
   const b = computeBreakdown(active);

@@ -39,7 +39,10 @@ function CloseShiftForm() {
 
   function save() {
     setTouched(true);
-    if (salesErr || outErr || form.hasError) return toast.error("Vui lòng kiểm tra lại các ô nhập");
+    if (salesErr || outErr || form.hasError) {
+      toast.error("Vui lòng kiểm tra lại các ô nhập");
+      return;
+    }
     updateActive((s) => ({
       ...s,
       pos: { cashSales: parseAmount(sales), cashOutflows: parseAmount(outflows) },

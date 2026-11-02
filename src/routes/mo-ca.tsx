@@ -31,7 +31,10 @@ function OpenShiftForm() {
   const diff = total - active!.handoverFloat;
 
   function save() {
-    if (form.hasError) return toast.error("Vui lòng sửa các ô nhập không hợp lệ");
+    if (form.hasError) {
+      toast.error("Vui lòng sửa các ô nhập không hợp lệ");
+      return;
+    }
     updateActive((s) => ({ ...s, opening: { ...s.opening, lines: form.draftLines, countedAt: new Date().toISOString() } }));
     toast.success("Đã lưu tiền đầu ca");
   }

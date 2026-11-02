@@ -47,7 +47,7 @@ describe("Shift-Mate reconciliation rules", () => {
 
   it("warns on duplicates and conflicting evidence", () => {
     const s = byId("demo-conflict");
-    expect(findDuplicates(s.exceptions, s.exceptions[1], s.exceptions[1].id)).toHaveLength(1);
+    expect(findDuplicates(s.exceptions, s.exceptions[1]!, s.exceptions[1]!.id)).toHaveLength(1);
     const ids = findConflicts(s).map((c) => c.id);
     expect(ids).toContain("pos-outflow");
     expect(ids.some((i) => i.startsWith("dup-"))).toBe(true);

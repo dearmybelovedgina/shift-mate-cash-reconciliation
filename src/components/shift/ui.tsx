@@ -31,7 +31,7 @@ export function Panel({ title, children, className, action }: { title?: string; 
   );
 }
 
-export function Stat({ label, value, tone = "default", hint }: { label: string; value: string; tone?: "default" | "success" | "warning" | "danger" | "primary"; hint?: string }) {
+export function Stat({ label, value, tone = "default", hint }: { label: string; value: string; tone?: "default" | "success" | "warning" | "danger" | "primary"; hint?: string | undefined }) {
   const tones = {
     default: "bg-card",
     primary: "bg-primary-soft",
