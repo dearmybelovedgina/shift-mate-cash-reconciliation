@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DongCaRouteImport } from './routes/dong-ca'
+import { Route as MoCaRouteImport } from './routes/mo-ca'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DongCaRoute = DongCaRouteImport.update({
+  id: '/dong-ca',
+  path: '/dong-ca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoCaRoute = MoCaRouteImport.update({
+  id: '/mo-ca',
+  path: '/mo-ca',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dong-ca': typeof DongCaRoute
+  '/mo-ca': typeof MoCaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dong-ca': typeof DongCaRoute
+  '/mo-ca': typeof MoCaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dong-ca': typeof DongCaRoute
+  '/mo-ca': typeof MoCaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/dong-ca' | '/mo-ca'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/dong-ca' | '/mo-ca'
+  id: '__root__' | '/' | '/dong-ca' | '/mo-ca'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DongCaRoute: typeof DongCaRoute
+  MoCaRoute: typeof MoCaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dong-ca': {
+      id: '/dong-ca'
+      path: '/dong-ca'
+      fullPath: '/dong-ca'
+      preLoaderRoute: typeof DongCaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mo-ca': {
+      id: '/mo-ca'
+      path: '/mo-ca'
+      fullPath: '/mo-ca'
+      preLoaderRoute: typeof MoCaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DongCaRoute: DongCaRoute,
+  MoCaRoute: MoCaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
