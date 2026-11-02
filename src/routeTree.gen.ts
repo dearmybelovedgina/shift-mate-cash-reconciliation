@@ -10,12 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BanGiaoRouteImport } from './routes/ban-giao'
 import { Route as DongCaRouteImport } from './routes/dong-ca'
+import { Route as KiemTraRouteImport } from './routes/kiem-tra'
 import { Route as MoCaRouteImport } from './routes/mo-ca'
+import { Route as NgoaiLeRouteImport } from './routes/ngoai-le'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BanGiaoRoute = BanGiaoRouteImport.update({
+  id: '/ban-giao',
+  path: '/ban-giao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DongCaRoute = DongCaRouteImport.update({
@@ -23,40 +31,70 @@ const DongCaRoute = DongCaRouteImport.update({
   path: '/dong-ca',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KiemTraRoute = KiemTraRouteImport.update({
+  id: '/kiem-tra',
+  path: '/kiem-tra',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MoCaRoute = MoCaRouteImport.update({
   id: '/mo-ca',
   path: '/mo-ca',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NgoaiLeRoute = NgoaiLeRouteImport.update({
+  id: '/ngoai-le',
+  path: '/ngoai-le',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ban-giao': typeof BanGiaoRoute
   '/dong-ca': typeof DongCaRoute
+  '/kiem-tra': typeof KiemTraRoute
   '/mo-ca': typeof MoCaRoute
+  '/ngoai-le': typeof NgoaiLeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ban-giao': typeof BanGiaoRoute
   '/dong-ca': typeof DongCaRoute
+  '/kiem-tra': typeof KiemTraRoute
   '/mo-ca': typeof MoCaRoute
+  '/ngoai-le': typeof NgoaiLeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ban-giao': typeof BanGiaoRoute
   '/dong-ca': typeof DongCaRoute
+  '/kiem-tra': typeof KiemTraRoute
   '/mo-ca': typeof MoCaRoute
+  '/ngoai-le': typeof NgoaiLeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dong-ca' | '/mo-ca'
+  fullPaths:
+    '/' | '/ban-giao' | '/dong-ca' | '/kiem-tra' | '/mo-ca' | '/ngoai-le'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dong-ca' | '/mo-ca'
-  id: '__root__' | '/' | '/dong-ca' | '/mo-ca'
+  to: '/' | '/ban-giao' | '/dong-ca' | '/kiem-tra' | '/mo-ca' | '/ngoai-le'
+  id:
+    | '__root__'
+    | '/'
+    | '/ban-giao'
+    | '/dong-ca'
+    | '/kiem-tra'
+    | '/mo-ca'
+    | '/ngoai-le'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BanGiaoRoute: typeof BanGiaoRoute
   DongCaRoute: typeof DongCaRoute
+  KiemTraRoute: typeof KiemTraRoute
   MoCaRoute: typeof MoCaRoute
+  NgoaiLeRoute: typeof NgoaiLeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -68,11 +106,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ban-giao': {
+      id: '/ban-giao'
+      path: '/ban-giao'
+      fullPath: '/ban-giao'
+      preLoaderRoute: typeof BanGiaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dong-ca': {
       id: '/dong-ca'
       path: '/dong-ca'
       fullPath: '/dong-ca'
       preLoaderRoute: typeof DongCaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kiem-tra': {
+      id: '/kiem-tra'
+      path: '/kiem-tra'
+      fullPath: '/kiem-tra'
+      preLoaderRoute: typeof KiemTraRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mo-ca': {
@@ -82,13 +134,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MoCaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ngoai-le': {
+      id: '/ngoai-le'
+      path: '/ngoai-le'
+      fullPath: '/ngoai-le'
+      preLoaderRoute: typeof NgoaiLeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BanGiaoRoute: BanGiaoRoute,
   DongCaRoute: DongCaRoute,
+  KiemTraRoute: KiemTraRoute,
   MoCaRoute: MoCaRoute,
+  NgoaiLeRoute: NgoaiLeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
