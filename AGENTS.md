@@ -8,3 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Architecture rules
+- Reconciliation math lives only in `src/lib/shift/calc.ts` as pure functions with tests in `src/test/shift-calc.test.ts`; UI must not re-implement formulas (keeps the no-double-count rule in one place).
+- v1 persistence is localStorage via `src/lib/shift/store.tsx` (no auth/cloud) — read storage in effects to avoid hydration mismatch.
