@@ -9,7 +9,7 @@ export function BreakdownTable({ b }: { b: B }) {
     ["Doanh thu tiền mặt POS", b.cashSales, "+"],
     ["Chi đã ghi trong POS", b.posOutflows, "−"],
     ["Chi đã xác minh ngoài POS", b.verifiedOffPosExpenses, "−"],
-    ["Đơn nhanh đã xác minh ngoài POS", b.verifiedOffPosQuickOrders, "+"],
+    ["Tiền mặt từ đơn nhanh đã xác minh ngoài POS (QR không tính)", b.verifiedOffPosQuickOrders, "+"],
   ];
   return (
     <dl className="tabular space-y-2 text-sm">

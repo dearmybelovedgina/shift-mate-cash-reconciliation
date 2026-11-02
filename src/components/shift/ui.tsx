@@ -65,11 +65,17 @@ export function DiscrepancyBadge({ value }: { value: number }) {
 }
 
 const exceptionStatusMeta: Record<ExceptionStatus, { label: string; cls: string }> = {
-  pending: { label: "Chờ xác minh", cls: "bg-warning-soft text-warning-foreground" },
-  verified: { label: "Đã xác minh (ngoài POS)", cls: "bg-primary-soft text-primary" },
-  accounted_in_pos: { label: "Đã ghi trong POS", cls: "bg-success-soft text-success" },
+  pending: { label: "Chưa xác minh (không tính)", cls: "bg-warning-soft text-warning-foreground" },
+  verified: { label: "Đã xác minh — ngoài POS (có tính)", cls: "bg-primary-soft text-primary" },
+  accounted_in_pos: { label: "Đã có trong số liệu POS (không tính thêm)", cls: "bg-success-soft text-success" },
 };
 export const EXCEPTION_STATUS_LABEL = Object.fromEntries(Object.entries(exceptionStatusMeta).map(([k, v]) => [k, v.label])) as Record<ExceptionStatus, string>;
+
+export const EXCEPTION_STATUS_HELP: Record<ExceptionStatus, string> = {
+  pending: "Chưa có bằng chứng/đối chiếu. Không được tính vào tiền dự kiến.",
+  verified: "Đã có bằng chứng, và khoản này KHÔNG có trong POS. Được tính một lần vào tiền dự kiến.",
+  accounted_in_pos: "Đã đối chiếu thấy khoản này nằm trong số liệu POS. Không tính thêm để tránh đếm hai lần.",
+};
 
 export function ExceptionStatusBadge({ status }: { status: ExceptionStatus }) {
   const m = exceptionStatusMeta[status];
