@@ -112,27 +112,15 @@ export function findConflicts(shift: Shift): Conflict[] {
   const seen = new Set<string>();
   for (const e of shift.exceptions) {
     if (seen.has(e.id)) continue;
-    const dups = findDuplicates(shift.exceptions, e, e.id).filter((d) => d.status !== "pending" || e.status !== "pending");
-    if (dups.length && (e.status !== "pending" || dups.some((d) => d.status !== "pending"))) {
+    const dups = findDuplicates(shift.exceptions, e, e.id);
+    if (dups.length) {
       [e, ...dups].forEach((d) => seen.add(d.id));
       out.push({
         id: `dup-${e.id}`,
-        message: `Có ${dups.length + 1} ghi nhận cùng loại, cùng số tiền ${formatVND(e.amount)} trong 15 phút — có thể bị ghi trùng. Xác nhận đây là các khoản riêng biệt.`,
+        message: `Có ${dups.length + 1} ghi nhận cùng loại, cùng số tiền ${formatVND(e.amount)} trong 15 phút — có thể bị ghi trùng. Xác nhận đây là các khoản riêng biệt hoặc xoá bản trùng.`,
       });
     }
   }
-  return out;
-}
-
-export interface Suggestion {
-  id: string;
-  kind: "pending_expense" | "pending_quick_order" | "recount";
-  title: string;
-  detail: string;
-  exceptionId?: string;
-  /** Discrepancy after this suggestion would be confirmed. */
-  remainingIfConfirmed?: number;
-}
 
 /**
  * Rule-based hints only. They describe possibilities ("có thể"), never a root cause.
