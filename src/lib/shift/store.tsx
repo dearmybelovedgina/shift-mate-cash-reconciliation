@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { emptyLines } from "./calc";
+import { emptyLines, normalizeException } from "./calc";
 import { makeSeedShifts } from "./seed";
 import type { Shift } from "./types";
 
@@ -39,7 +39,10 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
       const raw = localStorage.getItem(KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as State;
-        if (Array.isArray(parsed.shifts)) setState(parsed);
+        if (Array.isArray(parsed.shifts)) {
+          const shifts = parsed.shifts.map((s) => ({ ...s, exceptions: (s.exceptions ?? []).map(normalizeException) }));
+          setState({ ...parsed, shifts });
+        }
       }
     } catch {
       setStorageError("Không đọc được dữ liệu đã lưu. Đang dùng dữ liệu demo.");

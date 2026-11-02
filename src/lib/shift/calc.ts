@@ -1,4 +1,4 @@
-import { DENOMINATIONS, type CashCountLine, type ExceptionLog, type Shift } from "./types";
+import { DENOMINATIONS, type CashCountLine, type ExceptionLog, type ExceptionStatus, type Shift } from "./types";
 
 export const MAX_QTY = 10000;
 export const MAX_AMOUNT = 1_000_000_000;
@@ -35,18 +35,32 @@ export function parseAmount(raw: string): number {
 }
 
 /**
+ * Cash part of a record. Expenses: full amount. Quick orders: only the CASH component —
+ * QR-only = 0, split = cashAmount, unknown method (legacy) = 0 (never assumed cash).
+ */
+export function cashComponent(e: ExceptionLog): number {
+  if (e.type === "expense") return e.amount;
+  if (e.paymentMethod === "cash") return e.amount;
+  if (e.paymentMethod === "split") return e.cashAmount ?? 0;
+  return 0;
+}
+
+/**
  * Breakdown of expected closing cash.
- * expected = opening + POS cash sales − confirmed outflows ± confirmed adjustments
- * Anti double-count: expenses with status "accounted_in_pos" are already inside
- * pos.cashOutflows, and quick orders "accounted_in_pos" are inside pos.cashSales,
- * so they are NOT added again. Pending items are never counted.
+ * expected = opening + POS cash sales − POS cash outflows − VERIFIED off-POS cash expenses
+ *            + CASH part of VERIFIED off-POS quick orders + confirmed adjustments
+ * Anti double-count: records "accounted_in_pos" are already inside the POS figures and are
+ * NOT added again. Pending records are never counted.
  */
 export function computeBreakdown(shift: Shift) {
   const opening = countTotal(shift.opening.lines);
   const cashSales = shift.pos.cashSales ?? 0;
   const posOutflows = shift.pos.cashOutflows ?? 0;
-  const verifiedOffPosExpenses = sum(shift.exceptions.filter((e) => e.type === "expense" && e.status === "verified"));
-  const verifiedOffPosQuickOrders = sum(shift.exceptions.filter((e) => e.type === "quick_order" && e.status === "verified"));
+  const verified = shift.exceptions.filter((e) => e.status === "verified");
+  const verifiedOffPosExpenses = sum(verified.filter((e) => e.type === "expense"));
+  const verifiedQuick = verified.filter((e) => e.type === "quick_order");
+  const verifiedOffPosQuickOrders = verifiedQuick.reduce((s, e) => s + cashComponent(e), 0);
+  const verifiedOffPosQr = verifiedQuick.reduce((s, e) => s + (e.amount - cashComponent(e)), 0);
   const manualAdjustments = shift.reconciliation.adjustments.reduce((s, a) => s + a.amount, 0);
   const confirmedOutflows = posOutflows + verifiedOffPosExpenses;
   const expected = opening + cashSales - confirmedOutflows + verifiedOffPosQuickOrders + manualAdjustments;
@@ -58,6 +72,7 @@ export function computeBreakdown(shift: Shift) {
     posOutflows,
     verifiedOffPosExpenses,
     verifiedOffPosQuickOrders,
+    verifiedOffPosQr,
     manualAdjustments,
     confirmedOutflows,
     expected,
@@ -69,6 +84,49 @@ export function computeBreakdown(shift: Shift) {
 
 function sum(list: ExceptionLog[]) {
   return list.reduce((s, e) => s + e.amount, 0);
+}
+
+export type ExceptionField = "amount" | "provenance" | "evidence" | "paymentMethod" | "split" | "attested";
+
+/**
+ * Validates a record (already-parsed numbers) for the given status. Used for every save AND
+ * every status change, so no path can mark a record verified/accounted without evidence.
+ */
+export function validateException(e: ExceptionLog, status: ExceptionStatus = e.status): Partial<Record<ExceptionField, string>> {
+  const err: Partial<Record<ExceptionField, string>> = {};
+  if (!Number.isInteger(e.amount) || e.amount <= 0) err.amount = "Số tiền phải lớn hơn 0";
+  if (e.provenance.trim().length < 3)
+    err.provenance = "Ghi nguồn gốc/ngữ cảnh (VD: “phiếu ghi tay #3”, hoặc “chưa có biên nhận — lý do…”)";
+  if (e.type === "quick_order") {
+    if (!e.paymentMethod) err.paymentMethod = "Chọn hình thức thanh toán thực tế (tiền mặt / QR / kết hợp)";
+    else if (e.paymentMethod === "split") {
+      const c = e.cashAmount, q = e.qrAmount;
+      if (c === null || q === null || !Number.isInteger(c) || !Number.isInteger(q) || c < 0 || q < 0)
+        err.split = "Nhập phần tiền mặt và phần QR (số nguyên ≥ 0)";
+      else if (c + q !== e.amount) err.split = `Tiền mặt + QR (${formatVND(c + q)}) phải bằng tổng đơn (${formatVND(e.amount)})`;
+    }
+  }
+  if (status !== "pending") {
+    if (e.evidence.trim().length < 3)
+      err.evidence =
+        status === "accounted_in_pos"
+          ? "Cần mã/tham chiếu trong POS (VD: số hoá đơn POS) trước khi đánh dấu “Đã ghi trong POS”"
+          : e.type === "expense"
+            ? "Cần số hoá đơn/biên nhận hoặc người xác nhận trước khi xác minh"
+            : "Cần số phiếu ghi tay/tham chiếu thanh toán trước khi xác minh";
+    if (!e.attested) err.attested = "Cần tick xác nhận trước khi đổi trạng thái";
+  }
+  return err;
+}
+
+/** Confirmation text the staff must tick for a non-pending status. */
+export function attestationText(type: ExceptionLog["type"], status: ExceptionStatus): string | null {
+  if (status === "pending") return null;
+  if (status === "accounted_in_pos")
+    return "Tôi đã đối chiếu: khoản này có trong số liệu POS (theo mã tham chiếu trên), nên sẽ không được tính thêm lần nữa.";
+  return type === "expense"
+    ? "Tôi xác nhận tiền đã được chi từ két trong ca này và khoản này CHƯA được ghi trong POS."
+    : "Tôi xác nhận đã nhận thanh toán theo hình thức trên và đơn này CHƯA được nhập vào POS.";
 }
 
 export function openingDiscrepancy(shift: Shift) {
@@ -102,12 +160,27 @@ export function findConflicts(shift: Shift): Conflict[] {
       message: `Các khoản chi được đánh dấu "đã ghi POS" (${formatVND(inPosExpenses)}) lớn hơn tổng chi ghi trong POS (${formatVND(shift.pos.cashOutflows)}). Kiểm tra lại trạng thái hoặc số liệu POS.`,
     });
   }
-  const inPosQuick = sum(shift.exceptions.filter((e) => e.type === "quick_order" && e.status === "accounted_in_pos"));
+  const inPosQuick = shift.exceptions
+    .filter((e) => e.type === "quick_order" && e.status === "accounted_in_pos")
+    .reduce((s, e) => s + cashComponent(e), 0);
   if (shift.pos.cashSales !== null && inPosQuick > shift.pos.cashSales) {
     out.push({
       id: "pos-sales",
-      message: `Đơn nhanh được đánh dấu "đã ghi POS" (${formatVND(inPosQuick)}) lớn hơn doanh thu tiền mặt POS (${formatVND(shift.pos.cashSales)}).`,
+      message: `Phần tiền mặt của đơn nhanh được đánh dấu "đã ghi POS" (${formatVND(inPosQuick)}) lớn hơn doanh thu tiền mặt POS (${formatVND(shift.pos.cashSales)}).`,
     });
+  }
+  for (const e of shift.exceptions) {
+    if (e.type !== "quick_order") continue;
+    if (!e.paymentMethod) {
+      out.push({ id: `method-${e.id}`, message: `Đơn nhanh “${e.description}” (${formatVND(e.amount)}) chưa có hình thức thanh toán. Không được tính vào tiền mặt cho đến khi nhân viên chọn tiền mặt/QR/kết hợp.` });
+    } else if (e.paymentMethod === "split" && (e.cashAmount ?? -1) + (e.qrAmount ?? -1) !== e.amount) {
+      out.push({ id: `split-${e.id}`, message: `Đơn nhanh “${e.description}”: phần tiền mặt + QR không bằng tổng đơn.` });
+    }
+  }
+  for (const e of shift.exceptions) {
+    if (e.status !== "pending" && e.evidence.trim().length < 3) {
+      out.push({ id: `noev-${e.id}`, message: `“${e.description}” đang ở trạng thái đã xác minh/đã ghi POS nhưng thiếu bằng chứng/tham chiếu.` });
+    }
   }
   const seen = new Set<string>();
   for (const e of shift.exceptions) {
@@ -126,7 +199,7 @@ export function findConflicts(shift: Shift): Conflict[] {
 
 export interface Suggestion {
   id: string;
-  kind: "pending_expense" | "pending_quick_order" | "recount";
+  kind: "pending_expense" | "pending_quick_order" | "followup" | "recount";
   title: string;
   detail: string;
   exceptionId?: string;
@@ -157,15 +230,29 @@ export function buildSuggestions(shift: Shift): Suggestion[] {
         remainingIfConfirmed: discrepancy + e.amount,
       });
     }
-    if (e.type === "quick_order" && discrepancy > 0) {
-      out.push({
-        id: `s-${e.id}`,
-        kind: "pending_quick_order",
-        exceptionId: e.id,
-        title: `Đơn nhanh chưa xác minh: ${e.description || "Không mô tả"}`,
-        detail: `Có thể giải thích một phần tiền dư. Cần đối chiếu phiếu ghi tay trước khi xác nhận.`,
-        remainingIfConfirmed: discrepancy - e.amount,
-      });
+    if (e.type === "quick_order") {
+      const cash = cashComponent(e);
+      if (!e.paymentMethod || cash === 0) {
+        // QR-only or unknown method: listed for follow-up only, no cash effect.
+        out.push({
+          id: `s-${e.id}`,
+          kind: "followup",
+          exceptionId: e.id,
+          title: `Đơn nhanh cần theo dõi: ${e.description || "Không mô tả"}`,
+          detail: e.paymentMethod
+            ? "Đơn thanh toán QR — không ảnh hưởng tiền mặt trong két. Cần nhập bù vào POS/đối chiếu sau."
+            : "Chưa rõ hình thức thanh toán — không tính vào tiền mặt. Sửa ở Nhật ký ngoại lệ để chọn hình thức.",
+        });
+      } else if (discrepancy > 0) {
+        out.push({
+          id: `s-${e.id}`,
+          kind: "pending_quick_order",
+          exceptionId: e.id,
+          title: `Đơn nhanh chưa xác minh: ${e.description || "Không mô tả"}`,
+          detail: `Phần tiền mặt (${formatVND(cash)}) có thể giải thích một phần tiền dư. Cần đối chiếu phiếu ghi tay trước khi xác nhận.`,
+          remainingIfConfirmed: discrepancy - cash,
+        });
+      }
     }
   }
   if (!shift.reconciliation.recountConfirmed) {
@@ -179,13 +266,46 @@ export function buildSuggestions(shift: Shift): Suggestion[] {
   return out;
 }
 
+/** Open items that block "reconciled": pending records, contradictions, missing methods/evidence. */
+export function openIssues(shift: Shift): string[] {
+  const out = findConflicts(shift).map((c) => c.message);
+  const pending = shift.exceptions.filter((e) => e.status === "pending");
+  if (pending.length) out.push(`Còn ${pending.length} ngoại lệ chưa xác minh.`);
+  return out;
+}
+
 export function suggestedStatus(shift: Shift) {
   const b = computeBreakdown(shift);
   if (!b.closingReady) return null;
   if (b.discrepancy !== 0) return "unresolved" as const;
+  // Arithmetic zero is not enough when records are unverified or contradictory.
+  if (openIssues(shift).length) return "unresolved" as const;
   const hasAdjustments =
-    shift.reconciliation.adjustments.length > 0 || b.verifiedOffPosExpenses > 0 || b.verifiedOffPosQuickOrders > 0;
+    shift.reconciliation.adjustments.length > 0 || b.verifiedOffPosExpenses > 0 || b.verifiedOffPosQuickOrders > 0 || b.verifiedOffPosQr > 0;
   return hasAdjustments ? ("explained" as const) : ("reconciled" as const);
+}
+
+/** Defensive migration of stored records (older v1 data lacked method/provenance fields). */
+export function normalizeException(raw: Partial<ExceptionLog> & { id: string; type: ExceptionLog["type"]; amount: number }): ExceptionLog {
+  const isQuick = raw.type === "quick_order";
+  const method = isQuick && (raw.paymentMethod === "cash" || raw.paymentMethod === "qr" || raw.paymentMethod === "split") ? raw.paymentMethod : null;
+  const status: ExceptionStatus =
+    raw.status === "verified" || raw.status === "accounted_in_pos" || raw.status === "pending" ? raw.status : "pending";
+  return {
+    id: raw.id,
+    type: raw.type,
+    amount: raw.amount,
+    description: raw.description ?? "",
+    time: raw.time ?? new Date(0).toISOString(),
+    // Legacy quick order without a method stays unresolved until staff selects one.
+    status: isQuick && !method ? "pending" : status,
+    evidence: raw.evidence ?? "",
+    provenance: raw.provenance ?? "",
+    paymentMethod: method,
+    cashAmount: method === "split" ? (raw.cashAmount ?? null) : null,
+    qrAmount: method === "split" ? (raw.qrAmount ?? null) : null,
+    attested: isQuick && !method ? false : (raw.attested ?? false),
+  };
 }
 
 export function formatVND(n: number): string {
