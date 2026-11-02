@@ -7,8 +7,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { BreakdownTable } from "@/components/shift/BreakdownTable";
-import { EmptyState, FieldError, Notice, PageHeader, Panel, Stat } from "@/components/shift/ui";
-import { buildSuggestions, computeBreakdown, findConflicts, formatSigned, formatVND, openingDiscrepancy, parseAmount, validateAmount, type Suggestion } from "@/lib/shift/calc";
+import { EXCEPTION_STATUS_LABEL, EmptyState, FieldError, Notice, PageHeader, Panel, Stat } from "@/components/shift/ui";
+import { attestationText, buildSuggestions, cashComponent, computeBreakdown, validateException, findConflicts, formatSigned, formatVND, openingDiscrepancy, parseAmount, validateAmount, type Suggestion } from "@/lib/shift/calc";
 import { useShifts } from "@/lib/shift/store";
 
 export const Route = createFileRoute("/kiem-tra")({
@@ -26,6 +26,8 @@ export const Route = createFileRoute("/kiem-tra")({
 function InvestigatePage() {
   const { active, updateActive } = useShifts();
   const [pending, setPending] = useState<Suggestion | null>(null);
+  const [verifyAttest, setVerifyAttest] = useState(false);
+  const [dismissed, setDismissed] = useState<string[]>([]);
   const [adjAmount, setAdjAmount] = useState("");
   const [adjSign, setAdjSign] = useState<1 | -1>(-1);
   const [adjReason, setAdjReason] = useState("");
@@ -35,7 +37,10 @@ function InvestigatePage() {
 
   const b = computeBreakdown(active);
   const conflicts = findConflicts(active);
-  const suggestions = buildSuggestions(active);
+  const suggestions = buildSuggestions(active).filter((x) => !dismissed.includes(x.id));
+  const record = pending?.exceptionId ? active.exceptions.find((e) => e.id === pending.exceptionId) : undefined;
+  const verifyErrors = record ? validateException({ ...record, attested: verifyAttest }, "verified") : {};
+  const missingData = Object.entries(verifyErrors).filter(([k]) => k !== "attested").map(([, v]) => v);
   const openDiff = openingDiscrepancy(active);
 
   if (!b.closingReady) {
@@ -52,9 +57,11 @@ function InvestigatePage() {
     if (pending.kind === "recount") {
       updateActive((s) => ({ ...s, reconciliation: { ...s.reconciliation, recountConfirmed: true } }));
       toast.success("Đã ghi nhận: đã đếm lại tiền");
-    } else if (pending.exceptionId) {
-      const id = pending.exceptionId;
-      updateActive((s) => ({ ...s, exceptions: s.exceptions.map((e) => (e.id === id ? { ...e, status: "verified", evidence: e.evidence || "Xác nhận tại màn Kiểm tra" } : e)) }));
+    } else if (record) {
+      // Only allowed when the record already carries evidence and staff ticked the confirmation.
+      if (Object.keys(verifyErrors).length) return;
+      const id = record.id;
+      updateActive((s) => ({ ...s, exceptions: s.exceptions.map((e) => (e.id === id ? { ...e, status: "verified", attested: true } : e)) }));
       toast.success("Đã xác minh khoản này — tiền dự kiến đã cập nhật");
     }
     setPending(null);
@@ -129,8 +136,10 @@ function InvestigatePage() {
                               <Button asChild size="sm" variant="outline"><Link to="/dong-ca">Sửa số đếm</Link></Button>
                               <Button size="sm" onClick={() => setPending(s)}>Tôi đã đếm lại</Button>
                             </div>
+                          ) : s.kind === "followup" ? (
+                            <Button asChild size="sm" variant="outline"><Link to="/ngoai-le">Mở Nhật ký ngoại lệ</Link></Button>
                           ) : (
-                            <Button size="sm" onClick={() => setPending(s)}>Xác nhận đã có bằng chứng</Button>
+                            <Button size="sm" onClick={() => { setVerifyAttest(false); setPending(s); }}>Kiểm tra & xác minh</Button>
                           )}
                         </div>
                       </div>
@@ -185,16 +194,43 @@ function InvestigatePage() {
       <AlertDialog open={!!pending} onOpenChange={(o) => !o && setPending(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{pending?.kind === "recount" ? "Xác nhận đã đếm lại?" : "Xác nhận khoản này?"}</AlertDialogTitle>
+            <AlertDialogTitle>{pending?.kind === "recount" ? "Xác nhận đã đếm lại?" : "Xác minh ngoại lệ"}</AlertDialogTitle>
             <AlertDialogDescription>
               {pending?.kind === "recount"
                 ? "Chỉ xác nhận khi bạn đã đếm lại từng mệnh giá và cập nhật số đếm (nếu có thay đổi)."
-                : "Khoản sẽ chuyển sang “Đã xác minh (ngoài POS)” và được tính vào tiền dự kiến. Chỉ xác nhận khi đã có hoá đơn/phiếu và khoản này chưa được ghi trong POS."}
+                : "Khoản sẽ chuyển sang “Đã xác minh — ngoài POS” và được tính vào tiền dự kiến. Gợi ý chỉ là khả năng, không phải nguyên nhân đã xác định."}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {record && (
+            <div className="space-y-3 text-sm">
+              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-xl border p-3">
+                <dt className="text-muted-foreground">Loại</dt><dd>{record.type === "expense" ? "Chi tiền mặt" : "Đơn nhanh"}</dd>
+                {record.type === "quick_order" && (<><dt className="text-muted-foreground">Thanh toán</dt><dd>{record.paymentMethod === "cash" ? "Tiền mặt" : record.paymentMethod === "qr" ? "QR / chuyển khoản" : record.paymentMethod === "split" ? `Kết hợp (tiền mặt ${formatVND(record.cashAmount ?? 0)}, QR ${formatVND(record.qrAmount ?? 0)})` : "Chưa rõ"}</dd></>)}
+                <dt className="text-muted-foreground">Số tiền</dt><dd className="tabular">{formatVND(record.amount)}{record.type === "quick_order" && ` (tiền mặt tính: ${formatVND(cashComponent(record))})`}</dd>
+                <dt className="text-muted-foreground">Trạng thái</dt><dd>{EXCEPTION_STATUS_LABEL[record.status]}</dd>
+                <dt className="text-muted-foreground">Nguồn gốc</dt><dd>{record.provenance || "—"}</dd>
+                <dt className="text-muted-foreground">Bằng chứng</dt><dd>{record.evidence || "Chưa có"}</dd>
+              </dl>
+              {missingData.length > 0 ? (
+                <Notice tone="warning">
+                  <p className="font-semibold">Chưa thể xác minh</p>
+                  <ul className="mt-1 list-disc pl-4">{missingData.map((m) => <li key={m}>{m}</li>)}</ul>
+                  <Link to="/ngoai-le" className="mt-2 inline-block underline">Bổ sung ở Nhật ký ngoại lệ</Link>
+                </Notice>
+              ) : (
+                <label className="flex items-start gap-2">
+                  <input type="checkbox" checked={verifyAttest} onChange={(e) => setVerifyAttest(e.target.checked)} className="mt-1" />
+                  {attestationText(record.type, "verified")}
+                </label>
+              )}
+            </div>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel>Huỷ</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmSuggestion}>Xác nhận</AlertDialogAction>
+            {record && (
+              <Button variant="outline" onClick={() => { setDismissed((d) => [...d, pending!.id]); setPending(null); toast("Đã ẩn gợi ý — khoản vẫn chưa xác minh"); }}>Không liên quan</Button>
+            )}
+            <AlertDialogAction disabled={!!record && Object.keys(verifyErrors).length > 0} onClick={(e) => { if (record && Object.keys(verifyErrors).length) { e.preventDefault(); return; } confirmSuggestion(); }}>Xác nhận</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
