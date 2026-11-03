@@ -1,6 +1,8 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import type { ReactNode } from "react";
-import { ClipboardList, FileText, LayoutDashboard, LogIn, LogOut, Search, Wallet } from "lucide-react";
+import { Fragment, type ReactNode } from "react";
+import { ClipboardList, FileText, LayoutDashboard, LogIn, LogOut, RotateCcw, Search, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { isDemoModified } from "@/lib/shift/demo";
 import { cn } from "@/lib/utils";
 import { useShifts } from "@/lib/shift/store";
 
@@ -15,7 +17,7 @@ const NAV = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
-  const { active, state, setActive, loaded, storageError } = useShifts();
+  const { active, state, setActive, loaded, storageError, restoreActiveDemo, demoRestoreVersion } = useShifts();
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
@@ -67,7 +69,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             Bạn đang xem <b>dữ liệu demo hư cấu</b>. Tên người, số tiền đều là giả lập.
           </p>
         )}
-        {loaded ? children : <div className="h-64 animate-pulse rounded-2xl bg-muted" />}
+        {loaded && active && isDemoModified(active) && (
+          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning-foreground">
+            <p className="min-w-0 flex-1 font-medium">Demo đã được chỉnh sửa — số liệu có thể không còn khớp với kịch bản gốc</p>
+            <Button variant="outline" size="sm" onClick={() => {
+              if (confirm(`Khôi phục "${active.label}" về kịch bản gốc? Các chỉnh sửa của ca demo này sẽ bị xoá. Các ca khác và ca bạn tạo được giữ nguyên.`)) restoreActiveDemo();
+            }}><RotateCcw className="h-4 w-4" /> Khôi phục ca demo này</Button>
+          </div>
+        )}
+        {loaded ? <Fragment key={demoRestoreVersion}>{children}</Fragment> : <div className="h-64 animate-pulse rounded-2xl bg-muted" />}
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-background lg:hidden">

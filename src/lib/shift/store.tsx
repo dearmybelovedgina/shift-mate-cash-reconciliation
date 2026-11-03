@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { emptyLines, normalizeException } from "./calc";
 import { makeSeedShifts } from "./seed";
+import { restoreDemoShift } from "./demo";
 import type { Shift } from "./types";
 
 const KEY = "shift-mate:v1";
@@ -20,6 +21,8 @@ interface Ctx {
   createShift: (cashierName: string, handoverFloat: number) => void;
   deleteShift: (id: string) => void;
   resetDemo: () => void;
+  restoreActiveDemo: () => void;
+  demoRestoreVersion: number;
 }
 
 const ShiftContext = createContext<Ctx | null>(null);
@@ -33,6 +36,7 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<State>(initialState);
   const [loaded, setLoaded] = useState(false);
   const [storageError, setStorageError] = useState<string | null>(null);
+  const [demoRestoreVersion, setDemoRestoreVersion] = useState(0);
 
   useEffect(() => {
     try {
@@ -94,6 +98,13 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
         return { shifts, activeId: st.activeId === id ? shifts[0]!.id : st.activeId };
       }),
     resetDemo: () => setState(initialState()),
+    restoreActiveDemo: () => {
+      const selected = state.shifts.find((s) => s.id === state.activeId) ?? state.shifts[0];
+      if (!selected?.isDemo) return;
+      setState((st) => ({ ...st, shifts: restoreDemoShift(st.shifts, selected.id) }));
+      setDemoRestoreVersion((version) => version + 1);
+    },
+    demoRestoreVersion,
   };
 
   return <ShiftContext.Provider value={value}>{children}</ShiftContext.Provider>;
