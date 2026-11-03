@@ -1,50 +1,186 @@
-# Shift-Mate Cash Reconciliation
+# Shift-Mate — Cash Shift Reconciliation
 
-Build a responsive Vietnamese-language web app called Shift-Mate, based strictly on this product specification.
+## 1. Project Overview
 
-PURPOSE: A cash shift reconciliation companion for small F&B cashiers. Core user story JS5: help cashiers investigate end-of-shift cash discrepancies.
+**Shift-Mate** is a Vietnamese-language web application designed to help cashiers at small food and beverage businesses reconcile cash at the end of a shift.
 
-SCREENS:
+The product addresses a common operational problem: when the amount of cash physically counted does not match the expected balance, staff must manually investigate transactions, expenses, and unrecorded orders to understand the discrepancy.
 
-1. Open Shift: enter banknote quantities by VND denominations; calculate opening cash; flag opening discrepancy.
+Shift-Mate provides a structured workflow for cash counting, exception tracking, discrepancy investigation, and shift handover.
 
-2. Exception Log: record cash expenses, POS-outage quick orders, and status (pending, verified, accounted in POS).
+**Core user story (JS5):** Help cashiers investigate end-of-shift cash discrepancies with transparent calculations and evidence-based reconciliation.
 
-3. Close Shift: enter POS cash sales, cash outflows, count ending cash by denominations, calculate expected vs actual cash.
+## 2. Core Features
 
-4. Investigate: show discrepancy and rule-based suggestions for unverified expense, pending quick order, recount; human must confirm before adjusting numbers. Never claim an exact root cause without evidence.
+### Opening Cash Count
+- Count opening cash by Vietnamese banknote denomination.
+- Calculate the opening cash total automatically.
+- Compare counted cash against the previous shift's handover amount.
+- Highlight any opening discrepancy.
 
-5. Handover: reconciled/explained/unresolved status, notes, and copyable report.
+### Exception Log
+- Record cash expenses and quick orders created during POS outages.
+- Capture transaction details, payment methods, and supporting references.
+- Manage exception statuses: pending, verified, or accounted in POS.
+- Identify potentially duplicate or contradictory records.
 
-FORMULA: Expected closing cash = opening cash + POS cash sales - all confirmed cash outflows +/- other confirmed adjustments. Never double-count expenses. Actual minus expected = discrepancy.
+### Closing Cash Count
+- Enter POS cash sales and recorded cash outflows.
+- Count physical closing cash by denomination.
+- Calculate expected cash and compare it with actual cash.
 
-DATA: Shift, CashCount, CashCountLine, ExceptionLog, POSSummary, Reconciliation. Use localStorage for demo persistence. Seed realistic, clearly labeled fictional demo data. No authentication or cloud database for v1.
+### Discrepancy Investigation
+- Generate rule-based investigation suggestions.
+- Highlight pending cash expenses, unverified quick orders, and possible counting errors.
+- Require human verification before unresolved transactions affect reconciliation calculations.
+- Avoid automatically claiming an exact root cause without evidence.
 
-UX: polished fintech dashboard, Vietnamese copy, white background, soft blue palette, responsive desktop/mobile. Include validation, empty and error states, clear currency formatting, status indicators.
+### Shift Handover
+- Summarize the reconciliation outcome.
+- Distinguish reconciled, explained, and unresolved cases.
+- Record handover notes and produce a copyable summary.
 
-TEST CASES: matched shift, verified unrecorded cash expense 50,000 VND, unresolved discrepancy, invalid input, duplicate warning, conflicting evidence and corrections.
+## 3. Getting Started
 
-OUT OF SCOPE: bank API, bank verification, QR OCR, POS integration, automatic exact root-cause detection, realtime sync. Do not add these.
+### Prerequisites
 
-Build the MVP progressively with understandable, maintainable code. Do not present proposed features as already tested.
+- Node.js
+- npm
+- A modern web browser
 
-This project was built with [Lovable](https://lovable.dev).
+### Installation
 
-## Build with Lovable
+1. Clone or download the GitHub repository.
+2. Open a terminal in the project root directory, where `package.json` is located.
+3. Install dependencies:
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/4a261349-e013-49e0-8e71-c1be03a065cf).
+   `npm install`
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+4. Start the development server:
 
-## Development
+   `npm run dev`
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+5. Open the local address displayed in the terminal.
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+   In the verified local setup, the application was available at `http://localhost:8080/`.
+
+**Windows PowerShell note:** If PowerShell blocks `npm.ps1`, use `npm.cmd install` and `npm.cmd run dev`.
+
+## 4. Architecture Overview
+
+Shift-Mate is a client-side web application built with React, TypeScript, TanStack Router, and Vite.
+
+### Main Project Structure
+
+| Location | Responsibility |
+|---|---|
+| `src/routes/` | Application pages and navigation |
+| `src/components/` | Reusable UI components and cash-counting forms |
+| `src/hooks/` | Supporting React hooks |
+| `src/lib/shift/types.ts` | Domain data structures |
+| `src/lib/shift/calc.ts` | Cash reconciliation calculations, validation, and investigation rules |
+| `src/lib/shift/store.ts` | Shift state and local data persistence |
+| `src/test/` | Automated tests |
+| `public/` | Static assets |
+
+### Data Model
+
+The main domain objects include:
+
+- Shift
+- CashCount and CashCountLine
+- ExceptionLog
+- POSSummary
+- Reconciliation
+
+### Data Storage
+
+The MVP uses browser `localStorage` for demonstration persistence.
+
+No authentication service, cloud database, or live POS connection is implemented in the current version.
+
+## 5. Reconciliation Logic
+
+The expected closing cash is calculated as:
+
+**Expected Cash = Opening Cash + POS Cash Sales − POS Cash Outflows − Verified Off-POS Cash Expenses + Verified Off-POS Cash Quick Orders + Confirmed Adjustments**
+
+The cash discrepancy is:
+
+**Discrepancy = Actual Closing Cash − Expected Closing Cash**
+
+Key business rules:
+
+- Only verified off-POS records affect the expected cash balance.
+- Pending exceptions are excluded from confirmed calculations.
+- Transactions already accounted for in POS are not counted again.
+- QR-only quick orders do not increase physical cash.
+- Split-payment orders contribute only their cash component.
+- A zero discrepancy does not automatically mean the shift is reconciled when unresolved exceptions or conflicting records remain.
+- Investigation suggestions are rule-based and require human verification.
+
+These controls help reduce double-counting and prevent unsupported automatic adjustments.
+
+## 6. Testing and Validation
+
+The project includes automated tests using Vitest.
+
+Run the test suite with:
+
+`npm test`
+
+Or on Windows PowerShell:
+
+`npm.cmd test`
+
+**Verified local test result (3 November 2026):**
+
+- 5 test files passed.
+- 32 tests passed.
+- 0 tests failed.
+
+The test suite covers cash calculation logic, demo data, UI presentation, denomination count form behavior, and application routing.
+
+Passing these tests confirms the implemented test cases succeed; it does not guarantee that the application is free from all defects.
+
+## 7. Known Limitations
+
+The current version is a functional MVP rather than a production-ready financial system.
+
+- **No live POS integration:** POS amounts must be entered manually.
+- **No banking API integration:** Bank transactions are not retrieved or verified.
+- **No authentication or role management:** The MVP does not provide production-grade access controls.
+- **Local-only persistence:** Browser storage is not designed for multi-device synchronization or durable financial recordkeeping.
+- **No automatic root-cause determination:** Investigation suggestions highlight possible explanations, not definitive conclusions.
+- **No real-time synchronization:** Changes are not shared between multiple cashiers or devices.
+- **No OCR-based input:** POS slips and receipts are not automatically extracted in the implemented MVP.
+
+The application should be evaluated as a prototype using fictional demonstration data, not as a certified financial accounting system.
+
+## 8. AI-Assisted Development
+
+Shift-Mate was developed with AI-assisted tools, including Lovable and ChatGPT.
+
+AI was used to support interface implementation, code generation, business-rule refinement, and technical troubleshooting.
+
+Business requirements, reconciliation assumptions, exception-handling rules, and validation decisions were reviewed and refined throughout development.
+
+A separate AI Log & Reflection document describes significant prompts, AI mistakes, corrections, and lessons learned.
+
+## 9. Future Development
+
+Potential next versions may include:
+
+- OCR-assisted POS closeout data entry.
+- POS integration to reduce manual input.
+- User authentication and role-based access.
+- Cloud persistence and cross-device shift handovers.
+- Expanded reporting and reconciliation analytics.
+
+These are future development directions and are **not presented as implemented features in the current MVP**.
+
+---
+
+**Project:** Shift-Mate  
+**Challenge:** Techcombank AI Transformation Division — Intern Challenge 2026  
+**Product focus:** Cash discrepancy investigation and shift reconciliation for small F&B businesses
