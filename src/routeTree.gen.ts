@@ -15,6 +15,7 @@ import { Route as DongCaRouteImport } from './routes/dong-ca'
 import { Route as KiemTraRouteImport } from './routes/kiem-tra'
 import { Route as MoCaRouteImport } from './routes/mo-ca'
 import { Route as NgoaiLeRouteImport } from './routes/ngoai-le'
+import { Route as OcrPosRouteImport } from './routes/ocr-pos'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +47,11 @@ const NgoaiLeRoute = NgoaiLeRouteImport.update({
   path: '/ngoai-le',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OcrPosRoute = OcrPosRouteImport.update({
+  id: '/ocr-pos',
+  path: '/ocr-pos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/kiem-tra': typeof KiemTraRoute
   '/mo-ca': typeof MoCaRoute
   '/ngoai-le': typeof NgoaiLeRoute
+  '/ocr-pos': typeof OcrPosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/kiem-tra': typeof KiemTraRoute
   '/mo-ca': typeof MoCaRoute
   '/ngoai-le': typeof NgoaiLeRoute
+  '/ocr-pos': typeof OcrPosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,13 +79,27 @@ export interface FileRoutesById {
   '/kiem-tra': typeof KiemTraRoute
   '/mo-ca': typeof MoCaRoute
   '/ngoai-le': typeof NgoaiLeRoute
+  '/ocr-pos': typeof OcrPosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/ban-giao' | '/dong-ca' | '/kiem-tra' | '/mo-ca' | '/ngoai-le'
+    | '/'
+    | '/ban-giao'
+    | '/dong-ca'
+    | '/kiem-tra'
+    | '/mo-ca'
+    | '/ngoai-le'
+    | '/ocr-pos'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ban-giao' | '/dong-ca' | '/kiem-tra' | '/mo-ca' | '/ngoai-le'
+  to:
+    | '/'
+    | '/ban-giao'
+    | '/dong-ca'
+    | '/kiem-tra'
+    | '/mo-ca'
+    | '/ngoai-le'
+    | '/ocr-pos'
   id:
     | '__root__'
     | '/'
@@ -86,6 +108,7 @@ export interface FileRouteTypes {
     | '/kiem-tra'
     | '/mo-ca'
     | '/ngoai-le'
+    | '/ocr-pos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -95,6 +118,7 @@ export interface RootRouteChildren {
   KiemTraRoute: typeof KiemTraRoute
   MoCaRoute: typeof MoCaRoute
   NgoaiLeRoute: typeof NgoaiLeRoute
+  OcrPosRoute: typeof OcrPosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -141,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NgoaiLeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ocr-pos': {
+      id: '/ocr-pos'
+      path: '/ocr-pos'
+      fullPath: '/ocr-pos'
+      preLoaderRoute: typeof OcrPosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -151,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   KiemTraRoute: KiemTraRoute,
   MoCaRoute: MoCaRoute,
   NgoaiLeRoute: NgoaiLeRoute,
+  OcrPosRoute: OcrPosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
