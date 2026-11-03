@@ -12,6 +12,8 @@ import { reconciliationSummary } from "@/lib/shift/presentation";
 export const Route = createFileRoute("/ban-giao")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Bàn giao ca — Shift-Mate" },
       { name: "description", content: "Chốt trạng thái đối soát, ghi chú và sao chép báo cáo bàn giao ca." },
       { property: "og:title", content: "Bàn giao ca — Shift-Mate" },

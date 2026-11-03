@@ -11,6 +11,8 @@ import { useShifts } from "@/lib/shift/store";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Tổng quan ca — Shift-Mate" },
       { name: "description", content: "Theo dõi tiến độ mở ca, ngoại lệ, đóng ca và đối soát tiền mặt." },
       { property: "og:title", content: "Tổng quan ca — Shift-Mate" },
