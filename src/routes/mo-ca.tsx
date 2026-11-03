@@ -43,7 +43,7 @@ function OpenShiftForm() {
 
   return (
     <>
-      <PageHeader step="Bước 1" title="Mở ca" description="Đếm số tờ theo từng mệnh giá. Hệ thống so sánh với tiền bàn giao từ ca trước." />
+      <PageHeader step="Bước 1" title="Mở ca" description="Kiểm đếm tiền mặt đầu ca và đối chiếu với số tiền bàn giao từ ca trước." />
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <Panel title="Đếm tiền đầu ca">
           <DenominationCounter lines={active!.opening.lines} drafts={form.drafts} onDraftChange={form.setDraft} />
