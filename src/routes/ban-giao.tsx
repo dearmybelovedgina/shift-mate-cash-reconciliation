@@ -7,6 +7,7 @@ import { EXCEPTION_STATUS_LABEL, EmptyState, FieldError, Notice, PageHeader, Pan
 import { computeBreakdown, formatSigned, formatVND, openIssues, openingDiscrepancy, suggestedStatus } from "@/lib/shift/calc";
 import { useShifts } from "@/lib/shift/store";
 import type { ReconciliationStatus, Shift } from "@/lib/shift/types";
+import { reconciliationSummary } from "@/lib/shift/presentation";
 
 export const Route = createFileRoute("/ban-giao")({
   head: () => ({
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/ban-giao")({
 
 function buildReport(s: Shift, status: ReconciliationStatus, notes: string) {
   const b = computeBreakdown(s);
+  const summary = reconciliationSummary(s);
   const lines = [
     `BÁO CÁO BÀN GIAO CA — Shift-Mate${s.isDemo ? " [DỮ LIỆU DEMO]" : ""}`,
     `Ca: ${s.label} | Ngày: ${s.date} | Thu ngân: ${s.cashierName}`,
@@ -37,6 +39,7 @@ function buildReport(s: Shift, status: ReconciliationStatus, notes: string) {
     `Tiền dự kiến: ${formatVND(b.expected)}`,
     `Tiền thực tế: ${formatVND(b.actual)}`,
     `Chênh lệch: ${formatSigned(b.discrepancy)}`,
+    ...(b.discrepancy === 0 && summary.incomplete ? [`Tiền mặt đang khớp, nhưng ca chưa hoàn tất đối soát do còn ${summary.reasons}.`] : []),
     "",
     "Ngoại lệ:",
     ...(s.exceptions.length
@@ -104,7 +107,7 @@ function HandoverForm() {
 
   return (
     <>
-      <PageHeader step="Bước 5" title="Bàn giao ca" description="Chốt trạng thái, ghi chú và gửi báo cáo cho quản lý hoặc ca sau." actions={<ReconBadge status={shift.reconciliation.status} />} />
+      <PageHeader step="Bước 5" title="Bàn giao ca" description="Chốt trạng thái, ghi chú và gửi báo cáo cho quản lý hoặc ca sau." actions={<ReconBadge status={reconciliationSummary(shift).incomplete ? "unresolved" : shift.reconciliation.status} />} />
       <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
         <Panel title="Trạng thái đối soát">
           <div className="space-y-2">
