@@ -14,3 +14,4 @@
 - v1 persistence is localStorage via `src/lib/shift/store.tsx` (no auth/cloud) — read storage in effects to avoid hydration mismatch.
 - Exception status changes must pass `validateException` in `src/lib/shift/calc.ts` (every save and the Kiểm tra dialog); only `cashComponent` decides how much of a record counts as cash, so QR never leaks into expected cash.
 - Display-only pending/conflict summaries live in `src/lib/shift/presentation.ts` and reuse `findConflicts`; they must not change cash math or persisted reconciliation statuses.
+- Demo comparison and isolated restoration live in `src/lib/shift/demo.ts` against fresh canonical seeds; ignore count-save timestamps, preserve transaction times, and remount drafts on isolated restore so forms reflect restored values.

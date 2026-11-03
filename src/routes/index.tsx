@@ -111,6 +111,7 @@ function Dashboard() {
           <RotateCcw className="h-4 w-4" /> Khôi phục demo
         </Button>
       }>
+        <p className="mb-3 rounded-xl bg-warning-soft px-4 py-3 text-sm font-medium text-warning-foreground">Lưu ý: “Khôi phục demo” khôi phục toàn bộ dữ liệu mẫu và xoá tất cả ca bạn tự tạo. Để giữ các ca khác, dùng “Khôi phục ca demo này” ở thông báo demo đã chỉnh sửa.</p>
         <ul className="divide-y">
           {state.shifts.map((s) => {
             const sb = computeBreakdown(s);

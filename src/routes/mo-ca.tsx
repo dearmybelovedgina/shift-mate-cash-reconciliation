@@ -61,6 +61,7 @@ function OpenShiftForm() {
             </Notice>
           )}
           {form.hasError && <Notice tone="danger">Có ô nhập không hợp lệ — chưa thể lưu.</Notice>}
+          <Notice tone="info">Khi lưu thay đổi tiền đầu ca, tiền dự kiến cuối ca sẽ thay đổi. Số tiền đếm cuối ca và số liệu POS không tự động cập nhật.</Notice>
           <Button className="w-full" size="lg" onClick={save} disabled={form.hasError}>Lưu tiền đầu ca</Button>
           {active!.opening.countedAt && (
             <p className="text-center text-xs text-muted-foreground">Đã lưu lúc {new Date(active!.opening.countedAt).toLocaleString("vi-VN")}</p>
