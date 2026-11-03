@@ -70,7 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </p>
         )}
         {loaded && active && isDemoModified(active) && (
-          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning-foreground">
+          <div className="mb-4 flex flex-col items-start gap-3 rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning-foreground sm:flex-row sm:items-center">
             <p className="min-w-0 flex-1 font-medium">Demo đã được chỉnh sửa — số liệu có thể không còn khớp với kịch bản gốc</p>
             <Button variant="outline" size="sm" onClick={() => {
               if (confirm(`Khôi phục "${active.label}" về kịch bản gốc? Các chỉnh sửa của ca demo này sẽ bị xoá. Các ca khác và ca bạn tạo được giữ nguyên.`)) restoreActiveDemo();
