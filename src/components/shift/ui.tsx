@@ -141,6 +141,7 @@ export function DenominationCounter({
 }) {
   return (
     <div className="divide-y rounded-xl border">
+      <p className="px-3 pt-2 text-xs text-muted-foreground">Mệnh giá không có trong két? Để trống — hệ thống tự tính 0 tờ.</p>
       <div className="grid grid-cols-[1fr_96px_1fr] gap-3 bg-muted px-3 py-2 text-xs font-medium text-muted-foreground">
         <span>Mệnh giá</span>
         <span className="text-center">Số tờ</span>
