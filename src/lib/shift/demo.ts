@@ -10,6 +10,9 @@ function businessSnapshot(shift: Shift) {
       ...shift.reconciliation,
       adjustments: shift.reconciliation.adjustments.map((a) => ({ ...a, confirmedAt: Boolean(a.confirmedAt) })),
     },
+  }, (_key, value: unknown) => {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) return value;
+    return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)));
   });
 }
 

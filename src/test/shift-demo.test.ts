@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeBreakdown, emptyLines, suggestedStatus } from "@/lib/shift/calc";
+import { computeBreakdown, emptyLines, normalizeException, suggestedStatus } from "@/lib/shift/calc";
 import { isDemoModified, restoreDemoShift } from "@/lib/shift/demo";
 import { makeSeedShifts } from "@/lib/shift/seed";
 import type { Shift } from "@/lib/shift/types";
@@ -43,6 +43,13 @@ describe("Edited demo detection and isolated restoration", () => {
     shift.opening.countedAt = "2026-11-03T03:24:00Z";
     shift.closing.countedAt = "2026-11-03T03:25:00Z";
     expect(isDemoModified(shift)).toBe(false);
+  });
+
+  it("storage normalization and object key order do not mark unchanged demos as edited", () => {
+    for (const shift of makeSeedShifts()) {
+      shift.exceptions = shift.exceptions.map(normalizeException);
+      expect(isDemoModified(shift)).toBe(false);
+    }
   });
 
   it("user-created records are never treated as demos or restored, even with a canonical ID", () => {
