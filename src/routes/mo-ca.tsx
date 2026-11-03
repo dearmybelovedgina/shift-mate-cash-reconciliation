@@ -9,6 +9,8 @@ import { useShifts } from "@/lib/shift/store";
 export const Route = createFileRoute("/mo-ca")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Mở ca — Shift-Mate" },
       { name: "description", content: "Đếm tiền đầu ca theo mệnh giá VND và phát hiện chênh lệch đầu ca." },
       { property: "og:title", content: "Mở ca — Shift-Mate" },

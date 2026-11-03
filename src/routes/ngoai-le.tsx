@@ -13,6 +13,8 @@ const METHOD_LABEL: Record<PaymentMethod, string> = { cash: "Tiền mặt", qr: 
 export const Route = createFileRoute("/ngoai-le")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Nhật ký ngoại lệ — Shift-Mate" },
       { name: "description", content: "Ghi lại chi tiền mặt, đơn nhanh khi POS mất kết nối và trạng thái xác minh." },
       { property: "og:title", content: "Nhật ký ngoại lệ — Shift-Mate" },

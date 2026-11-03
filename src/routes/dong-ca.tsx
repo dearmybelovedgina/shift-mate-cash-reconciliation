@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DenominationCounter, FieldError, Notice, PageHeader, Panel } from "@/components/shift/ui";
+import { DenominationCounter, FieldError, Notice, PageHeader, Panel, ReconciliationNotice } from "@/components/shift/ui";
 import { BreakdownTable } from "@/components/shift/BreakdownTable";
 import { useCountForm } from "@/components/shift/useCountForm";
 import { computeBreakdown, countTotal, formatVND, parseAmount, validateAmount } from "@/lib/shift/calc";
@@ -11,6 +11,8 @@ import { useShifts } from "@/lib/shift/store";
 export const Route = createFileRoute("/dong-ca")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Đóng ca — Shift-Mate" },
       { name: "description", content: "Nhập doanh thu tiền mặt POS, chi tiền mặt và đếm tiền cuối ca để so sánh dự kiến với thực tế." },
       { property: "og:title", content: "Đóng ca — Shift-Mate" },
@@ -89,6 +91,7 @@ function CloseShiftForm() {
           <Panel title="Dự kiến vs thực tế">
             {previewReady ? <BreakdownTable b={preview} /> : <Notice tone="info">Nhập đủ số liệu hợp lệ để xem kết quả.</Notice>}
           </Panel>
+          <ReconciliationNotice shift={shift} />
           {shift.opening.countedAt === null && <Notice tone="warning">Chưa lưu tiền đầu ca — kết quả có thể sai. <Link to="/mo-ca" className="underline">Mở ca</Link></Notice>}
           <Button size="lg" className="w-full" onClick={save}>Lưu đóng ca</Button>
           {shift.closing.countedAt && (

@@ -14,6 +14,8 @@ import { useShifts } from "@/lib/shift/store";
 export const Route = createFileRoute("/kiem-tra")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Kiểm tra chênh lệch — Shift-Mate" },
       { name: "description", content: "Gợi ý theo quy tắc để điều tra chênh lệch tiền mặt cuối ca. Người dùng xác nhận trước mọi điều chỉnh." },
       { property: "og:title", content: "Kiểm tra chênh lệch — Shift-Mate" },

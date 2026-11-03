@@ -3,13 +3,16 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, CheckCircle2, Circle, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DiscrepancyBadge, FieldError, Panel, PageHeader, ReconBadge, Stat } from "@/components/shift/ui";
+import { DiscrepancyBadge, FieldError, Panel, PageHeader, ReconBadge, ReconciliationNotice, Stat } from "@/components/shift/ui";
+import { reconciliationSummary } from "@/lib/shift/presentation";
 import { computeBreakdown, formatVND, parseAmount, suggestedStatus, validateAmount } from "@/lib/shift/calc";
 import { useShifts } from "@/lib/shift/store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Tổng quan ca — Shift-Mate" },
       { name: "description", content: "Theo dõi tiến độ mở ca, ngoại lệ, đóng ca và đối soát tiền mặt." },
       { property: "og:title", content: "Tổng quan ca — Shift-Mate" },
@@ -27,13 +30,14 @@ function Dashboard() {
 
   if (!active) return null;
   const b = computeBreakdown(active);
-  const status = active.reconciliation.status ?? suggestedStatus(active);
+  const summary = reconciliationSummary(active);
+  const status = summary.incomplete ? "unresolved" : active.reconciliation.status ?? suggestedStatus(active);
 
   const steps = [
     { to: "/mo-ca", label: "Mở ca", done: active.opening.countedAt !== null },
     { to: "/ngoai-le", label: "Ghi ngoại lệ", done: active.exceptions.length > 0 },
     { to: "/dong-ca", label: "Đóng ca", done: b.closingReady },
-    { to: "/kiem-tra", label: "Kiểm tra chênh lệch", done: b.closingReady && b.discrepancy === 0 },
+    { to: "/kiem-tra", label: "Kiểm tra chênh lệch", done: b.closingReady && b.discrepancy === 0 && !summary.incomplete },
     { to: "/ban-giao", label: "Bàn giao", done: active.reconciliation.status !== null },
   ] as const;
 
@@ -65,6 +69,8 @@ function Dashboard() {
           hint={b.closingReady ? undefined : "Hoàn tất Đóng ca để tính"}
         />
       </div>
+
+      <div className="mt-4"><ReconciliationNotice shift={active} /></div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <Panel title="Tiến độ ca">

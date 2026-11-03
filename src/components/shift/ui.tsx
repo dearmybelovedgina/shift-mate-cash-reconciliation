@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
+import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
+import { reconciliationSummary } from "@/lib/shift/presentation";
 import { formatSigned, formatVND, validateQuantity } from "@/lib/shift/calc";
-import type { CashCountLine, ExceptionStatus, ReconciliationStatus } from "@/lib/shift/types";
+import type { CashCountLine, ExceptionStatus, ReconciliationStatus, Shift } from "@/lib/shift/types";
 import { Inbox } from "lucide-react";
 
 export function PageHeader({ step, title, description, actions }: { step?: string; title: string; description?: string; actions?: ReactNode }) {
@@ -56,7 +58,7 @@ export function discrepancyTone(n: number) {
 export function DiscrepancyBadge({ value }: { value: number }) {
   const tone = discrepancyTone(value);
   const cls = { success: "bg-success-soft text-success", danger: "bg-destructive-soft text-destructive", warning: "bg-warning-soft text-warning-foreground" }[tone];
-  const label = value === 0 ? "Khớp" : value < 0 ? "Thiếu" : "Dư";
+  const label = value === 0 ? "Số tiền khớp" : value < 0 ? "Thiếu" : "Dư";
   return (
     <span className={cn("tabular inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold", cls)}>
       {label} {value !== 0 && formatSigned(value)}
@@ -92,6 +94,18 @@ export function ReconBadge({ status }: { status: ReconciliationStatus | null }) 
   if (!status) return <span className="inline-flex rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">Chưa đủ dữ liệu</span>;
   const cls = { reconciled: "bg-success-soft text-success", explained: "bg-primary-soft text-primary", unresolved: "bg-destructive-soft text-destructive" }[status];
   return <span className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-semibold", cls)}>{RECON_LABEL[status]}</span>;
+}
+
+export function ReconciliationNotice({ shift }: { shift: Shift }) {
+  const summary = reconciliationSummary(shift);
+  return (
+    <Notice tone={summary.incomplete ? "warning" : "info"}>
+      <p className="font-semibold">Đối soát ca: {summary.incomplete ? `Chưa hoàn tất — ${summary.reasons}` : "Không còn ngoại lệ chưa xác minh hoặc cảnh báo mâu thuẫn"}</p>
+      <p className="mt-1">Ngoại lệ chưa xác minh: {summary.pendingCount} · Cảnh báo mâu thuẫn: {summary.conflictCount}</p>
+      <p className="mt-1">Ngoại lệ chưa xác minh không được tính vào tiền mặt dự kiến. Số tiền khớp không đồng nghĩa ca đã hoàn tất đối soát.</p>
+      {summary.incomplete && <Link to={summary.pendingCount > 0 ? "/ngoai-le" : "/kiem-tra"} className="mt-2 inline-block font-medium underline">{summary.pendingCount > 0 ? "Xử lý ngoại lệ" : "Kiểm tra mâu thuẫn"}</Link>}
+    </Notice>
+  );
 }
 
 export function EmptyState({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
