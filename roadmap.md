@@ -2,4 +2,4 @@
 - [x] Add a short unresolved-items summary to the handover report without changing rules or data.
 - [x] Run regression tests and verify the zero-discrepancy flow and mobile layout.
 - [x] Flag edited demos, add confirmed selected-demo restore, and clarify full reset and opening-cash edits.
-- [ ] Verify demo restoration preserves user shifts and other demo edits; run regression checks.
+- [x] Verify demo restoration preserves user shifts and other demo edits; run regression checks.
