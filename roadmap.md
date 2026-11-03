@@ -1,3 +1,3 @@
 - [x] Separate cash matching from unresolved reconciliation on Close Shift and Overview.
 - [x] Add a short unresolved-items summary to the handover report without changing rules or data.
-- [ ] Run regression tests and verify the zero-discrepancy flow and mobile layout.
+- [x] Run regression tests and verify the zero-discrepancy flow and mobile layout.
